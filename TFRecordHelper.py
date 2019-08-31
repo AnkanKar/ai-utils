@@ -16,24 +16,23 @@ class TFRecordHelper:
   def _bytes_feature(self, value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
   
-  def createDataRecord(self, out_filename, images, labels):
+  def _save_datarecord(self, out_filename, images, labels):
   
-    writer = tf.io.TFRecordWriter(out_filename)
+    with tf.io.TFRecordWriter(out_filename) as writer:
     
-    for i in range(len(images)):
-      feature = {
-          'image_raw': self._bytes_feature(images[i].tostring()),
-          'label': self._int64_feature(labels[i])
-      }
-      
-      example = tf.train.Example(features=tf.train.Features(feature=feature))
-      
-      writer.write(example.SerializeToString())
-    
-    writer.close()
+        for i in range(len(images)):
+          feature = {
+              'image_raw': self._bytes_feature(images[i].tostring()),
+              'label': self._int64_feature(labels[i])
+          }
+
+          example = tf.train.Example(features=tf.train.Features(feature=feature))
+
+          writer.write(example.SerializeToString())
+
     sys.stdout.flush()
   
-  def createTFRecord(self):
+  def create_tfrecord(self):
     if self.datasetName.lower() == 'cifar10':
         (x_train, y_train), (x_test, y_test) = cifar10.load_data()
         self.trainDataShape = [x_train.shape[1],x_train.shape[2],x_train.shape[3]]
@@ -45,15 +44,15 @@ class TFRecordHelper:
           trainFileName = f'{self.pathToSave}/{self.fileNamePrefix}-train.tfrecords'
           testFileName = f'{self.pathToSave}/{self.fileNamePrefix}-test.tfrecords'
         
-        self.createDataRecord(trainFileName, x_train, y_train)
-        self.createDataRecord(testFileName, x_test, y_test)
+        self._save_datarecord(trainFileName, x_train, y_train)
+        self._save_datarecord(testFileName, x_test, y_test)
     return {'trainFileName':trainFileName,
             'testFileName': testFileName,
             'trainingDataShape': self.trainDataShape
     }
   
   
-  def parser(self, record):
+  def _parser(self, record):
     keys_to_features = {
         'image_raw': tf.FixedLenFeature((), tf.string),
         'label': tf.FixedLenFeature((), tf.int64)
@@ -70,5 +69,5 @@ class TFRecordHelper:
   
   def get_dataset_from_TFRecord(self, filename):
     dataset = tf.data.TFRecordDataset(filenames=filename)
-    dataset = dataset.map(self.parser)
+    dataset = dataset.map(self._parser)
     return dataset
