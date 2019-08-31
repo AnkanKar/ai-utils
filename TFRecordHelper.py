@@ -1,5 +1,6 @@
 import tensorflow as tf
 import sys
+from tensorflow.keras.datasets import cifar10
 
 
 class TFRecordHelper:
