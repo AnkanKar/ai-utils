@@ -63,7 +63,6 @@ class TFRecordHelper:
     image = tf.cast(image, tf.int32)
     image = tf.reshape(image, [32,32,3])
     label = tf.cast(parsed["label"], tf.int32)
-    print(f'One hot encode: {self.oneHotEncode}')
     if self.oneHotEncode:
       label = tf.one_hot(label, 10)
     return image, label
